@@ -3,29 +3,34 @@
 
 var _ = require('lodash');
 var React = require('react');
-var og = require('./og');
+var OpenGraph = require('./open-graph');
 
 
 
 var Layout = React.createClass({
 
-    getDefaultProps: function() {
+    getDefaultProps: function()
+    {
         return {
+            charset: 'utf-8',
             viewPort: {
                 width: 'deviceWidth',
                 initialScale: '1',
                 maximumScale: '1',
                 userScalable: 'no'
             },
-            mobile: false
+            mobile: true,
+            body: null
         }
     },
 
-    concatViewPort: function() {
-
+    concatViewPort: function()
+    {
         var viewPort = [];
-        for(var key in this.props.viewPort) {
-            if(this.props.viewPort.hasOwnProperty(key)) {
+        for(var key in this.props.viewPort)
+        {
+            if(this.props.viewPort.hasOwnProperty(key))
+            {
                 viewPort.push(_.kebabCase(key) + '=' + _.kebabCase(this.props.viewPort[key]));
             }
         }
@@ -36,10 +41,10 @@ var Layout = React.createClass({
     render: function() {
 
         var html = {
-            __html: this.props.html
+            __html: this.props.body
         };
 
-        var openGraphElements = og.createElements(this.props.openGraph);
+        var openGraphElements = OpenGraph.createElements(this.props.openGraph);
 
         var icon = null;
         if(_.isString(this.props.icon)) {
@@ -51,17 +56,31 @@ var Layout = React.createClass({
             mobile = <meta name="viewport" content={this.concatViewPort()} />
         }
 
+        var styles = [];
+        for(var i = 0; i < this.props.styles.length; i++)
+        {
+            styles.push(<link key={i} rel="stylesheet" href={this.props.styles[i]}></link>);
+        }
+
+        var scripts = [];
+        for(var i = 0; i < this.props.scripts.length; i++)
+        {
+            scripts.push(<script key={i} type="text/javascript" src={this.props.scripts[i]}></script>);
+        }
+
         return (
             <html>
                 <head>
                     <title>{this.props.title}</title>
-                    <meta charSet="utf-8" />
+                    <meta charSet={this.props.charset} />
                     {openGraphElements}
                     {icon}
                     {mobile}
+                    {styles}
                 </head>
                 <body>
                     <div id="app" dangerouslySetInnerHTML={html}></div>
+                    {scripts}
                 </body>
             </html>
         );
@@ -73,5 +92,5 @@ module.exports.render = function(options) {
     options = options || {};
 
     var docType = '<!DOCTYPE html>';
-    return  docType + React.renderToStaticMarkup(<Bootstrap {...options} />);
+    return  docType + React.renderToStaticMarkup(<Layout {...options} />);
 };
